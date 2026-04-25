@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(railway --version)",
+      "Bash(railway status *)",
+      "Bash(railway up *)",
+      "Bash(curl -s -X POST https://web-production-9c60c.up.railway.app/users -H 'Content-Type: application/json' -d '{\"name\":\"山田 太郎\",\"email\":\"yamada@example.com\"}')",
+      "Bash(curl -s -X POST https://web-production-9c60c.up.railway.app/users -H 'Content-Type: application/json' -d '{\"name\":\"鈴木 花子\",\"email\":\"suzuki@example.com\"}')",
+      "Bash(curl -s -X POST https://web-production-9c60c.up.railway.app/users -H 'Content-Type: application/json' -d '{\"name\":\"田中 一郎\",\"email\":\"tanaka@example.com\"}')",
+      "Bash(curl -s -X POST https://web-production-9c60c.up.railway.app/users -H 'Content-Type: application/json' -d '{\"name\":\"佐藤 美咲\",\"email\":\"sato@example.com\"}')",
+      "Bash(curl -s -X POST https://web-production-9c60c.up.railway.app/users -H 'Content-Type: application/json' -d '{\"name\":\"伊藤 健太\",\"email\":\"ito@example.com\"}')",
+      "Bash(railway logs *)",
+      "Bash(curl -s \"https://web-production-9c60c.up.railway.app/users\")",
+      "Bash(python seed.py)",
+      "Bash(railway variables *)",
+      "Bash(python -c \"import sys; sys.stdout.reconfigure\\(encoding='utf-8'\\)\")",
+      "Bash(python -X utf8 seed.py)",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(node gen_spec.js)"
+    ]
+  }
+}

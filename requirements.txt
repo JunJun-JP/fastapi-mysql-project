@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+jinja2
+sqlalchemy
+pymysql
+python-dotenv
+python-multipart
+polars
+scikit-learn
+torch
+numpy
+matplotlib

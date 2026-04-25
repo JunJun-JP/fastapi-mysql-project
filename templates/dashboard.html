@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>GRC Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,'Hiragino Sans',sans-serif;}
+body{background:#f0f2f5;color:#1a1a1a;min-height:100vh;}
+
+/* ── Header ── */
+.header{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 24px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;}
+.header h1{font-size:15px;font-weight:600;color:#111;}
+.live{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#16a34a;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:20px;padding:2px 9px;}
+.dot{width:5px;height:5px;border-radius:50%;background:#16a34a;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.spacer{flex:1;}
+.btn{font-size:12px;padding:5px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;color:#374151;transition:all .15s;}
+.btn:hover{background:#f9fafb;border-color:#d1d5db;}
+.btn.primary{background:#2563eb;color:#fff;border-color:#2563eb;}
+.btn.primary:hover{background:#1d4ed8;}
+.btn.purple{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.btn.purple:hover{background:#6d28d9;}
+.btn.ghost{color:#9ca3af;border-color:#e5e7eb;}
+.btn.ghost:hover{color:#ef4444;border-color:#fca5a5;background:#fff5f5;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ── Layout ── */
+.page{max-width:1080px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.mc{background:#fff;border-radius:10px;padding:16px 20px;border:1px solid #e5e7eb;}
+.ml{font-size:11px;color:#6b7280;margin-bottom:6px;font-weight:500;letter-spacing:.03em;}
+.mv{font-size:28px;font-weight:600;color:#111;line-height:1;}
+.mv.red{color:#dc2626;}
+.mv.amber{color:#d97706;}
+.mv.green{color:#16a34a;}
+.mv.blue{color:#2563eb;}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:16px 20px;}
+.card-title{font-size:12px;font-weight:600;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── Table ── */
+table{width:100%;font-size:12px;border-collapse:collapse;}
+th{font-size:11px;color:#9ca3af;font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid #f3f4f6;}
+td{padding:7px 8px;border-bottom:1px solid #f9fafb;color:#374151;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.badge.high{background:#fef2f2;color:#b91c1c;}
+.badge.medium{background:#fffbeb;color:#b45309;}
+.badge.low{background:#f0fdf4;color:#15803d;}
+.badge.normal{background:#f3f4f6;color:#6b7280;}
+
+/* ── AI table empty state ── */
+.empty{text-align:center;padding:24px 0;color:#9ca3af;font-size:13px;}
+
+/* ── Recommendations ── */
+.rec-item{border-left:3px solid #e5e7eb;padding:8px 12px;border-radius:0 6px 6px 0;background:#fafafa;margin-bottom:8px;}
+.rec-item.high{border-left-color:#dc2626;}
+.rec-item.medium{border-left-color:#f59e0b;}
+.rec-item.low{border-left-color:#16a34a;}
+.rec-item:last-child{margin-bottom:0;}
+.rec-rule{font-size:11px;font-weight:700;color:#374151;margin-bottom:2px;}
+.rec-desc{font-size:11px;color:#6b7280;line-height:1.5;}
+
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:12px;width:min(680px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-head{padding:20px 24px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;}
+.modal-head h2{font-size:15px;font-weight:600;flex:1;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;padding:0 4px;}
+.modal-close:hover{color:#374151;}
+.modal-body{padding:20px 24px;}
+.m-section{margin-bottom:20px;}
+.m-label{font-size:11px;font-weight:600;color:#9ca3af;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+.pattern{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;border-radius:8px;margin-bottom:8px;border:1px solid;}
+.pattern.high{background:#fef2f2;border-color:#fecaca;}
+.pattern.medium{background:#fffbeb;border-color:#fde68a;}
+.pattern.low{background:#f0fdf4;border-color:#bbf7d0;}
+.pattern-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.pattern-label{font-size:12px;font-weight:700;margin-bottom:2px;}
+.pattern.high .pattern-label{color:#b91c1c;}
+.pattern.medium .pattern-label{color:#92400e;}
+.pattern.low .pattern-label{color:#15803d;}
+.pattern-detail{font-size:12px;color:#6b7280;line-height:1.5;}
+.log-table{width:100%;font-size:11px;border-collapse:collapse;}
+.log-table th{color:#9ca3af;font-weight:500;text-align:left;padding:5px 8px;border-bottom:1px solid #f3f4f6;}
+.log-table td{padding:5px 8px;border-bottom:1px solid #f9fafb;font-family:monospace;}
+.log-table tr:last-child td{border:none;}
+.st{font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;}
+.st.ok{background:#f0fdf4;color:#15803d;}
+.st.warn{background:#fffbeb;color:#92400e;}
+.st.err{background:#fef2f2;color:#b91c1c;}
+tr.clickable{cursor:pointer;}
+tr.clickable:hover td{background:#f0f9ff;}
+
+/* ── Status chart ── */
+.chart-row{display:flex;align-items:center;gap:28px;}
+.chart-canvas{width:120px!important;height:120px!important;flex-shrink:0;}
+.leg{display:flex;flex-direction:column;gap:8px;flex:1;}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.leg-label{color:#6b7280;flex:1;}
+.leg-val{font-weight:600;color:#111;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GRC Dashboard</h1>
+  <span class="live"><span class="dot"></span>live</span>
+  <span class="spacer"></span>
+  <button class="btn" onclick="load()">更新</button>
+  <button class="btn primary" id="auditBtn" onclick="runAudit()">監査実行</button>
+  <button class="btn purple" id="aiBtn" onclick="runAI()">AI 解析</button>
+  <button class="btn ghost" onclick="location.href='/dashboard/logout'">ログアウト</button>
+</div>
+
+<!-- 詳細モーダル -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h2 id="modal-title">詳細</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="mc"><div class="ml">総リクエスト</div><div class="mv blue" id="m-total">—</div></div>
+    <div class="mc"><div class="ml">High findings</div><div class="mv red" id="m-high">—</div></div>
+    <div class="mc"><div class="ml">異常 IP 数</div><div class="mv amber" id="m-anomaly">—</div></div>
+    <div class="mc"><div class="ml">最適エポック数</div><div class="mv green" id="m-epoch">—</div></div>
+  </div>
+
+  <!-- AI 解析テーブル -->
+  <div class="card">
+    <div class="card-title">AI 異常検知（Isolation Forest + AutoEncoder）</div>
+    <table>
+      <thead>
+        <tr>
+          <th>アクセス元</th>
+          <th>リクエスト数</th>
+          <th>エラー率</th>
+          <th>404率</th>
+          <th>エンドポイント種類</th>
+          <th>深夜アクセス</th>
+          <th>Isolation Forest</th>
+          <th>AE スコア</th>
+          <th>判定</th>
+        </tr>
+      </thead>
+      <tbody id="ai-tb">
+        <tr><td colspan="7" class="empty">「AI 解析」ボタンを押してください</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- リスクスコア + 推奨アクション -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">リスクスコア ランキング</div>
+      <table>
+        <thead><tr><th>ユーザー / IP</th><th>スコア</th><th>レベル</th></tr></thead>
+        <tbody id="rs-tb"><tr><td colspan="3" class="empty">「監査実行」で更新</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">推奨アクション</div>
+      <div id="rec-list"><p class="empty">「監査実行」で更新</p></div>
+    </div>
+  </div>
+
+  <!-- ステータスコード分布 -->
+  <div class="card">
+    <div class="card-title">ステータスコード分布</div>
+    <div class="chart-row">
+      <canvas id="sc" class="chart-canvas"></canvas>
+      <div class="leg" id="sc-leg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let chart = null;
+let _aiResults = [];   // AI解析結果をキャッシュ（モーダル参照用）
+
+/** fetch wrapper: 401 が返ったらログインページへリダイレクト */
+async function apiFetch(url, opts = {}) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) {
+    window.location.href = '/dashboard/login';
+    throw new Error('Unauthorized');
+  }
+  return r;
+}
+
+const PATTERN_ICON = {
+  brute_force:      '🔑',
+  scanning:         '🔍',
+  path_probing:     '🗺️',
+  night_access:     '🌙',
+  high_errors:      '💥',
+  data_destruction: '🗑️',
+  normal:           '✅',
+};
+
+function openModal(idx) {
+  const row = _aiResults[idx];
+  if (!row) return;
+  const name = row.user_name
+    ? `${row.user_name} <span style="font-size:12px;color:#6b7280;font-weight:400;">${row.ip}</span>`
+    : `<span style="font-family:monospace;">${row.ip}</span>`;
+  const verdict = row.is_anomaly
+    ? '<span style="color:#b91c1c;font-weight:700;">⚠ 異常</span>'
+    : '<span style="color:#15803d;">正常</span>';
+
+  document.getElementById('modal-title').innerHTML = `${name} &nbsp;${verdict}`;
+
+  // パターン
+  const pHtml = (row.patterns || []).map(p => `
+    <div class="pattern ${p.severity}">
+      <span class="pattern-icon">${PATTERN_ICON[p.type] || '⚠️'}</span>
+      <div>
+        <div class="pattern-label">${p.label}</div>
+        <div class="pattern-detail">${p.detail}</div>
+      </div>
+    </div>`).join('');
+
+  // ステータスバッジ
+  const stBadge = (code) => {
+    if (!code) return '—';
+    const cls = code < 300 ? 'ok' : code < 400 ? 'warn' : 'err';
+    return `<span class="st ${cls}">${code}</span>`;
+  };
+
+  // 直近ログ
+  const logHtml = (row.recent_logs || []).length === 0
+    ? '<p style="color:#9ca3af;font-size:12px;">ログなし</p>'
+    : `<table class="log-table">
+        <thead><tr><th>時刻</th><th>メソッド</th><th>エンドポイント</th><th>ステータス</th></tr></thead>
+        <tbody>
+          ${(row.recent_logs || []).map(l => `
+            <tr>
+              <td style="color:#6b7280;">${l.time}</td>
+              <td style="color:#7c3aed;font-weight:600;">${l.method}</td>
+              <td style="color:#1f2937;">${l.endpoint}</td>
+              <td>${stBadge(l.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+       </table>`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="m-section">
+      <div class="m-label">検出されたパターン</div>
+      ${pHtml}
+    </div>
+    <div class="m-section">
+      <div class="m-label">直近のアクセスログ（最大10件）</div>
+      ${logHtml}
+    </div>`;
+
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-bg') || e.currentTarget?.classList.contains('modal-close')) {
+    document.getElementById('modal-bg').classList.remove('open');
+  }
+}
+
+async function load() {
+  try {
+    const r = await apiFetch('/audit-logs');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const logs = await r.json();
+
+    document.getElementById('m-total').textContent = logs.length;
+
+    const s2 = logs.filter(l => l.status_code >= 200 && l.status_code < 300).length;
+    const s3 = logs.filter(l => l.status_code >= 300 && l.status_code < 400).length;
+    const s4 = logs.filter(l => l.status_code >= 400).length;
+    const total = s2 + s3 + s4 || 1;
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('sc'), {
+      type: 'doughnut',
+      data: {
+        labels: ['2xx', '3xx', '4xx/5xx'],
+        datasets: [{ data: [s2, s3, s4], backgroundColor: ['#16a34a','#f59e0b','#dc2626'], borderWidth: 0 }]
+      },
+      options: { responsive: false, cutout: '72%', plugins: { legend: { display: false } } }
+    });
+    document.getElementById('sc-leg').innerHTML = [
+      { label: '2xx 成功', val: s2, color: '#16a34a' },
+      { label: '3xx リダイレクト', val: s3, color: '#f59e0b' },
+      { label: '4xx / 5xx エラー', val: s4, color: '#dc2626' },
+    ].map(x => `
+      <div class="leg-item">
+        <span class="leg-dot" style="background:${x.color}"></span>
+        <span class="leg-label">${x.label}</span>
+        <span class="leg-val">${x.val} <span style="font-weight:400;color:#9ca3af;">(${Math.round(x.val/total*100)}%)</span></span>
+      </div>`
+    ).join('');
+  } catch(e) {
+    console.error('load error:', e);
+  }
+}
+
+async function runAudit() {
+  const btn = document.getElementById('auditBtn');
+  btn.disabled = true; btn.textContent = '実行中…';
+  try {
+    const r = await apiFetch('/run-audit', { method: 'POST' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    await loadAudit();
+  } catch(e) {
+    alert('監査エラー: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '監査実行';
+  }
+}
+
+async function loadAudit() {
+  try {
+    const [fr, sr] = await Promise.all([apiFetch('/audit-findings'), apiFetch('/risk-scores')]);
+    const findings = fr.ok ? await fr.json() : [];
+    const scores   = sr.ok ? await sr.json() : [];
+
+    document.getElementById('m-high').textContent = findings.filter(f => f.risk_level === 'high').length;
+
+    document.getElementById('rs-tb').innerHTML = scores.length === 0
+      ? '<tr><td colspan="3" class="empty">データなし</td></tr>'
+      : scores.slice(0, 8).map(s => {
+          const isExternal = !s.user_name;
+          const who = isExternal
+            ? `<span style="font-family:monospace;font-size:11px;">${s.ip_address}</span>
+               <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fef3c7;color:#92400e;margin-left:5px;">外部</span>`
+            : `<span>${s.user_name}</span>
+               <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:#eff6ff;color:#1e40af;margin-left:5px;">社内</span>`;
+          return `<tr>
+            <td>${who}</td>
+            <td><strong>${s.score}</strong></td>
+            <td><span class="badge ${s.risk_level}">${s.risk_level.toUpperCase()}</span></td>
+          </tr>`;
+        }).join('');
+
+    const recs = [...new Map(findings.map(f => [f.rule_id, f])).values()]
+      .sort((a, b) => ({ immediate:0, high:1, medium:2 }[a.urgency]||9) - ({ immediate:0, high:1, medium:2 }[b.urgency]||9));
+
+    document.getElementById('rec-list').innerHTML = recs.length === 0
+      ? '<p class="empty">データなし</p>'
+      : recs.map(f => `
+          <div class="rec-item ${f.risk_level}">
+            <div class="rec-rule">${f.rule_id}</div>
+            <div class="rec-desc">${f.recommendation}</div>
+          </div>`
+        ).join('');
+  } catch(e) {
+    console.error('loadAudit error:', e);
+  }
+}
+
+async function runAI() {
+  const btn = document.getElementById('aiBtn');
+  btn.disabled = true; btn.textContent = '解析中…';
+  try {
+    const r = await apiFetch('/ai-detect', { method: 'POST' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+
+    document.getElementById('m-anomaly').textContent = d.anomaly_count;
+    document.getElementById('m-epoch').textContent   = d.ae_optimal_epochs ?? '—';
+
+    _aiResults = d.results || [];
+    document.getElementById('ai-tb').innerHTML = _aiResults.length === 0
+      ? '<tr><td colspan="9" class="empty">データなし</td></tr>'
+      : _aiResults.map((row, idx) => {
+          const isExternal = !row.user_name;
+          const who = isExternal
+            ? `<div style="display:flex;align-items:center;gap:6px;">
+                 <span style="font-family:monospace;font-size:11px;color:#374151;">${row.ip}</span>
+                 <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fef3c7;color:#92400e;">外部</span>
+               </div>`
+            : `<div style="display:flex;align-items:center;gap:6px;">
+                 <span style="font-weight:500;">${row.user_name}</span>
+                 <span style="font-size:10px;color:#6b7280;font-family:monospace;">${row.ip}</span>
+                 <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:#eff6ff;color:#1e40af;">社内</span>
+               </div>`;
+          return `<tr class="clickable" onclick="openModal(${idx})">
+            <td>${who}</td>
+            <td>${row.features.total_requests}</td>
+            <td>${(row.features.error_rate * 100).toFixed(1)}%</td>
+            <td>${(row.features.error_404_rate * 100).toFixed(1)}%</td>
+            <td>${row.features.unique_endpoint_count}</td>
+            <td>${row.features.night_access_count}</td>
+            <td>${row.isolation_forest
+              ? '<span class="badge high">異常</span>'
+              : '<span class="badge normal">正常</span>'}</td>
+            <td style="font-size:11px;color:#6b7280;">${row.autoencoder_score.toFixed(4)}</td>
+            <td>${row.is_anomaly
+              ? '<span class="badge high">⚠ 異常</span>'
+              : '<span class="badge normal">正常</span>'}</td>
+          </tr>`;
+        }).join('');
+  } catch(e) {
+    document.getElementById('ai-tb').innerHTML = `<tr><td colspan="7" class="empty" style="color:#dc2626;">エラー: ${e.message}</td></tr>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'AI 解析';
+  }
+}
+
+load();
+loadAudit();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
